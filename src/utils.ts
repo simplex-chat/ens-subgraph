@@ -9,8 +9,12 @@ export function createEventID(event: ethereum.Event): string {
     .concat(event.logIndex.toString());
 }
 
-export const ETH_NODE =
-  "0x93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae";
+// namehash("testing") — TLD root for the SNRC mainnet .testing deployment.
+// Replaces the upstream ETH_NODE (namehash("eth")) since this fork only
+// indexes our own ENS-shaped contracts. If a second TLD ships (e.g.
+// .simplex), thread an additional constant through alongside this one.
+export const TESTING_NODE =
+  "0x28e7c59272dc97327b924be290951e94fb52c2e795a3f5c2bb69198f33bb0758";
 export const ROOT_NODE =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 export const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";

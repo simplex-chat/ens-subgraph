@@ -44,7 +44,17 @@ dataSources:
     name: Resolver
     network: mainnet
     source:
+      # SNRC mainnet .testing PublicResolver. Upstream ENS leaves this
+      # entry without an address (and without a startBlock) and relies
+      # on per-name dynamic resolver indexing — but Graph Node 0.36
+      # interprets a missing startBlock as block 1, which makes the
+      # whole subgraph try to scan logs from genesis. We pin to the one
+      # PublicResolver our `.testing` names use; if a name ever picks a
+      # custom resolver, its events won't be indexed here (template
+      # promotion is a follow-up).
+      address: "0x80fa1903e70af03e79c73fb7feae2fb33aebae01"
       abi: Resolver
+      startBlock: 25250870
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6

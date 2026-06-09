@@ -5,7 +5,7 @@ import {
   checkValidLabel,
   concat,
   createEventID,
-  ETH_NODE,
+  TESTING_NODE,
   uint256ToByteArray,
 } from "./utils";
 
@@ -15,16 +15,6 @@ import {
   NameRenewed as NameRenewedEvent,
   Transfer as TransferEvent,
 } from "./types/BaseRegistrar/BaseRegistrar";
-
-import {
-  NameRegistered as LegacyEthRegistrarController_NameRegistered,
-  NameRenewed as LegacyEthRegistrarController_NameRenewed,
-} from "./types/LegacyEthRegistrarController/LegacyEthRegistrarController";
-import {
-  NameRegistered as UnwrappedEthRegistrarController_NameRegistered,
-  NameRenewed as UnwrappedEthRegistrarController_NameRenewed,
-} from "./types/UnwrappedEthRegistrarController/UnwrappedEthRegistrarController";
-import { NameRegistered as WrappedEthRegistrarController_NameRegistered } from "./types/WrappedEthRegistrarController/WrappedEthRegistrarController";
 
 // Import entity types generated from the GraphQL schema
 import {
@@ -38,7 +28,7 @@ import {
 
 const GRACE_PERIOD_SECONDS = BigInt.fromI32(7776000); // 90 days
 
-var rootNode: ByteArray = ByteArray.fromHexString(ETH_NODE);
+var rootNode: ByteArray = ByteArray.fromHexString(TESTING_NODE);
 
 export function handleNameRegistered(event: NameRegisteredEvent): void {
   let account = new Account(event.params.owner.toHex());
@@ -59,7 +49,7 @@ export function handleNameRegistered(event: NameRegisteredEvent): void {
   let labelName = ens.nameByHash(label.toHexString());
   if (checkValidLabel(labelName)) {
     domain.labelName = labelName;
-    domain.name = labelName! + ".eth";
+    domain.name = labelName! + ".testing";
     registration.labelName = labelName;
   }
   domain.save();
@@ -74,55 +64,14 @@ export function handleNameRegistered(event: NameRegisteredEvent): void {
   registrationEvent.save();
 }
 
-// Legacy controller
+// The upstream Legacy / Wrapped / Unwrapped ETHRegistrarController handlers
+// lived here. They're gone because the SNRC subgraph indexes only the
+// SimplexController (see src/simplexController.ts), and the codegen no
+// longer materialises the corresponding type files. `setNamePreimage` is
+// kept as an `export` so simplexController.ts can call it without
+// duplicating the domain-lookup logic.
 
-export function handleNameRegisteredByLegacyController(
-  event: LegacyEthRegistrarController_NameRegistered
-): void {
-  setNamePreimage(event.params.name, event.params.label, event.params.cost);
-}
-
-export function handleNameRenewedByLegacyController(
-  event: LegacyEthRegistrarController_NameRenewed
-): void {
-  setNamePreimage(event.params.name, event.params.label, event.params.cost);
-}
-
-// Wrapped controller (reuses same renew event as legacy controller)
-
-export function handleNameRegisteredByWrappedController(
-  event: WrappedEthRegistrarController_NameRegistered
-): void {
-  setNamePreimage(
-    event.params.name,
-    event.params.label,
-    event.params.baseCost.plus(event.params.premium)
-  );
-}
-
-// Unwrapped controller
-
-export function handleNameRegisteredByUnwrappedController(
-  event: UnwrappedEthRegistrarController_NameRegistered
-): void {
-  setNamePreimage(
-    event.params.label,
-    event.params.labelhash,
-    event.params.baseCost.plus(event.params.premium)
-  );
-}
-
-export function handleNameRenewedByUnwrappedController(
-  event: UnwrappedEthRegistrarController_NameRenewed
-): void {
-  setNamePreimage(
-    event.params.label,
-    event.params.labelhash,
-    event.params.cost
-  );
-}
-
-function setNamePreimage(name: string, label: Bytes, cost: BigInt): void {
+export function setNamePreimage(name: string, label: Bytes, cost: BigInt): void {
   if (!checkValidLabel(name)) {
     return;
   }
@@ -130,7 +79,7 @@ function setNamePreimage(name: string, label: Bytes, cost: BigInt): void {
   let domain = Domain.load(crypto.keccak256(concat(rootNode, label)).toHex())!;
   if (domain.labelName != name) {
     domain.labelName = name;
-    domain.name = name + ".eth";
+    domain.name = name + ".testing";
     domain.save();
   }
 
