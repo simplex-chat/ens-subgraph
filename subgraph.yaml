@@ -1,8 +1,10 @@
 specVersion: 0.0.4
 description: >-
-  A secure & decentralized way to address resources on and off the blockchain
-  using simple, human-readable names. Access domains and transfer history.
-repository: "https://github.com/ensdomains/ens-subgraph"
+  SNRC subgraph — indexes the SimpleX Namespace Registry deployment on Ethereum.
+  Fork of ensdomains/ens-subgraph adapted to point at our ENS-shaped
+  contracts (ENSRegistry / BaseRegistrarImplementation / NameWrapper /
+  PublicResolver) plus our SimplexController.
+repository: "https://github.com/simplex-chat/ens-subgraph"
 schema:
   file: ./schema.graphql
 dataSources:
@@ -10,9 +12,12 @@ dataSources:
     name: ENSRegistry
     network: mainnet
     source:
-      address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
+      # SNRC mainnet .testing ENSRegistry (UUPS proxy)
+      address: "0x03f438da0bd44da3c6c1d0392f8ba183b8b3a7a6"
       abi: EnsRegistry
-      startBlock: 9380380
+      # ENSRegistry deploy tx 0x66959f0a… mined at block 25250877.
+      # We start a few blocks earlier as a safety margin.
+      startBlock: 25250870
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -34,35 +39,6 @@ dataSources:
           handler: handleNewResolver
         - event: "NewTTL(indexed bytes32,uint64)"
           handler: handleNewTTL
-
-  - kind: ethereum/contract
-    name: ENSRegistryOld
-    network: mainnet
-    source:
-      address: "0x314159265dd8dbb310642f98f50c066173c1259b"
-      abi: EnsRegistry
-      startBlock: 3327417
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.6
-      language: wasm/assemblyscript
-      file: ./src/ensRegistry.ts
-      entities:
-        - Domain
-        - Account
-        - Resolver
-      abis:
-        - name: EnsRegistry
-          file: ./abis/Registry.json
-      eventHandlers:
-        - event: "Transfer(indexed bytes32,address)"
-          handler: handleTransferOldRegistry
-        - event: "NewOwner(indexed bytes32,indexed bytes32,address)"
-          handler: handleNewOwnerOldRegistry
-        - event: "NewResolver(indexed bytes32,address)"
-          handler: handleNewResolverOldRegistry
-        - event: "NewTTL(indexed bytes32,uint64)"
-          handler: handleNewTTLOldRegistry
 
   - kind: ethereum/contract
     name: Resolver
@@ -117,9 +93,10 @@ dataSources:
     name: BaseRegistrar
     network: mainnet
     source:
-      address: "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85"
+      # SNRC mainnet .testing BaseRegistrarImplementation (UUPS proxy)
+      address: "0x42d63e6a9f92c0282dc0b9677d9192d491b0da72"
       abi: BaseRegistrar
-      startBlock: 9380410
+      startBlock: 25250870
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -142,62 +119,13 @@ dataSources:
           handler: handleNameTransferred
 
   - kind: ethereum/contract
-    name: LegacyEthRegistrarController
-    network: mainnet
-    source:
-      address: "0x283Af0B28c62C092C9727F1Ee09c02CA627EB7F5"
-      abi: LegacyEthRegistrarController
-      startBlock: 9380471
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.6
-      language: wasm/assemblyscript
-      file: ./src/ethRegistrar.ts
-      entities:
-        - Registration
-      abis:
-        - name: LegacyEthRegistrarController
-          file: ./abis/LegacyEthRegistrarController.json
-      eventHandlers:
-        - event: >-
-            NameRegistered(string,indexed bytes32,indexed
-            address,uint256,uint256)
-          handler: handleNameRegisteredByLegacyController
-        - event: "NameRenewed(string,indexed bytes32,uint256,uint256)"
-          handler: handleNameRenewedByLegacyController
-
-  - kind: ethereum/contract
-    name: WrappedEthRegistrarController
-    network: mainnet
-    source:
-      address: "0x253553366Da8546fC250F225fe3d25d0C782303b"
-      abi: WrappedEthRegistrarController
-      startBlock: 16925618
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.6
-      language: wasm/assemblyscript
-      file: ./src/ethRegistrar.ts
-      entities:
-        - Registration
-      abis:
-        - name: WrappedEthRegistrarController
-          file: ./abis/WrappedEthRegistrarController.json
-      eventHandlers:
-        - event: >-
-            NameRegistered(string,indexed bytes32,indexed
-            address,uint256,uint256,uint256)
-          handler: handleNameRegisteredByWrappedController
-        - event: "NameRenewed(string,indexed bytes32,uint256,uint256)"
-          handler: handleNameRenewedByLegacyController
-
-  - kind: ethereum/contract
     name: NameWrapper
     network: mainnet
     source:
-      address: "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401"
+      # SNRC mainnet .testing NameWrapper
+      address: "0x9be8cf2b3d315a290de52f4c878a9e890269877f"
       abi: NameWrapper
-      startBlock: 16925608
+      startBlock: 25250870
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -223,26 +151,33 @@ dataSources:
           handler: handleTransferBatch
 
   - kind: ethereum/contract
-    name: UnwrappedEthRegistrarController
+    name: SimplexController
     network: mainnet
     source:
-      address: "0x59E16fcCd424Cc24e280Be16E11Bcd56fb0CE547"
-      abi: UnwrappedEthRegistrarController
-      startBlock: 22764821
+      # SNRC mainnet .testing SimplexController (UUPS proxy address; stable
+      # across implementation upgrades, so this never needs to change unless
+      # the registrar swaps to a different proxy).
+      address: "0x41d7522837fe4f715f9e3aaaae99711870aaeefb"
+      abi: SimplexController
+      startBlock: 25250870
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
-      file: ./src/ethRegistrar.ts
+      file: ./src/simplexController.ts
       entities:
         - Registration
       abis:
-        - name: UnwrappedEthRegistrarController
-          file: ./abis/UnwrappedEthRegistrarController.json
+        - name: SimplexController
+          file: ./abis/SimplexController.json
       eventHandlers:
+        # SimplexController's NameRegistered carries an extra `bytes32 referrer`
+        # field over upstream ENS's NameRegistered. We currently drop the
+        # referrer when indexing — wire it through schema.graphql when the
+        # frontend wants to surface referral analytics.
         - event: >-
             NameRegistered(string,indexed bytes32,indexed
             address,uint256,uint256,uint256,bytes32)
-          handler: handleNameRegisteredByUnwrappedController
+          handler: handleNameRegisteredBySimplexController
         - event: "NameRenewed(string,indexed bytes32,uint256,uint256,bytes32)"
-          handler: handleNameRenewedByUnwrappedController
+          handler: handleNameRenewedBySimplexController
