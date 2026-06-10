@@ -449,3 +449,22 @@ type VersionChanged implements ResolverEvent @entity(immutable: true) {
   "The new version number of the resolver"
   version: BigInt!
 }
+
+"""
+A name reserved on the SimplexController via addReservedNames. The event
+carries the plaintext label, so indexing it recovers the labelhash preimage
+for names registered directly against the BaseRegistrar (e.g. registerReserved)
+that never emit SimplexController.NameRegistered(string).
+"""
+type ReservedName @entity(immutable: false) {
+  "The labelhash (keccak256 of the label), hex-encoded — matches Registration.id"
+  id: ID!
+  "The labelhash as bytes"
+  labelhash: Bytes!
+  "The human-readable reserved label"
+  name: String!
+  "False once ReservedNameRemoved fires; the preimage is kept regardless"
+  active: Boolean!
+  "The block at which the name was first reserved"
+  reservedAtBlock: BigInt!
+}

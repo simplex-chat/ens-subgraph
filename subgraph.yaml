@@ -177,6 +177,7 @@ dataSources:
       file: ./src/simplexController.ts
       entities:
         - Registration
+        - ReservedName
       abis:
         - name: SimplexController
           file: ./abis/SimplexController.json
@@ -191,3 +192,10 @@ dataSources:
           handler: handleNameRegisteredBySimplexController
         - event: "NameRenewed(string,indexed bytes32,uint256,uint256,bytes32)"
           handler: handleNameRenewedBySimplexController
+        # ReservedNameAdded/Removed carry the plaintext label. Indexing them
+        # recovers the preimage for names registered directly via the
+        # BaseRegistrar (registerReserved) which never emit NameRegistered(string).
+        - event: "ReservedNameAdded(string)"
+          handler: handleReservedNameAdded
+        - event: "ReservedNameRemoved(string)"
+          handler: handleReservedNameRemoved

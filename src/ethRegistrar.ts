@@ -24,6 +24,7 @@ import {
   NameRenewed,
   NameTransferred,
   Registration,
+  ReservedName,
 } from "./types/schema";
 
 const GRACE_PERIOD_SECONDS = BigInt.fromI32(7776000); // 90 days
@@ -47,6 +48,15 @@ export function handleNameRegistered(event: NameRegisteredEvent): void {
   domain.expiryDate = event.params.expires.plus(GRACE_PERIOD_SECONDS);
 
   let labelName = ens.nameByHash(label.toHexString());
+  // Rainbow-table miss: fall back to a reserved-name preimage if we indexed
+  // one. Reserved names registered directly via the BaseRegistrar never emit
+  // SimplexController.NameRegistered(string), so this is their only label source.
+  if (!checkValidLabel(labelName)) {
+    let reserved = ReservedName.load(label.toHexString());
+    if (reserved != null) {
+      labelName = reserved.name;
+    }
+  }
   if (checkValidLabel(labelName)) {
     domain.labelName = labelName;
     domain.name = labelName! + ".testing";
