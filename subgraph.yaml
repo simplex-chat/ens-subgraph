@@ -100,6 +100,61 @@ dataSources:
           handler: handleVersionChanged
 
   - kind: ethereum/contract
+    name: ResolverV2
+    network: mainnet
+    source:
+      # New PublicResolver from the TLD-parameterised NameWrapper redeploy.
+      # New `.testing` registrations point here; the `Resolver` datasource
+      # above stays for names registered before the swap (old resolver
+      # 0x80fa…ae01).
+      address: "0x15231918f8c87bb8853219748b85a9bbcebedc1b"
+      abi: Resolver
+      startBlock: 25295490
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/resolver.ts
+      entities:
+        - AddrChanged
+        - MulticoinAddrChanged
+        - NameChanged
+        - AbiChanged
+        - PubkeyChanged
+        - Textchanged
+        - ContenthashChanged
+        - InterfaceChanged
+        - AuthorisationChanged
+      abis:
+        - name: Resolver
+          file: ./abis/PublicResolver.json
+      eventHandlers:
+        - event: "ABIChanged(indexed bytes32,indexed uint256)"
+          handler: handleABIChanged
+        - event: "AddrChanged(indexed bytes32,address)"
+          handler: handleAddrChanged
+        - event: "AddressChanged(indexed bytes32,uint256,bytes)"
+          handler: handleMulticoinAddrChanged
+        - event: >-
+            AuthorisationChanged(indexed bytes32,indexed address,indexed
+            address,bool)
+          handler: handleAuthorisationChanged
+        - event: "ContenthashChanged(indexed bytes32,bytes)"
+          handler: handleContentHashChanged
+        - event: "InterfaceChanged(indexed bytes32,indexed bytes4,address)"
+          handler: handleInterfaceChanged
+        - event: "NameChanged(indexed bytes32,string)"
+          handler: handleNameChanged
+        - event: "PubkeyChanged(indexed bytes32,bytes32,bytes32)"
+          handler: handlePubkeyChanged
+        - event: "TextChanged(indexed bytes32,indexed string,string)"
+          handler: handleTextChanged
+        - event: "TextChanged(indexed bytes32,indexed string,string,string)"
+          handler: handleTextChangedWithValue
+        - event: "VersionChanged(indexed bytes32,uint64)"
+          handler: handleVersionChanged
+
+  - kind: ethereum/contract
     name: BaseRegistrar
     network: mainnet
     source:
@@ -132,10 +187,11 @@ dataSources:
     name: NameWrapper
     network: mainnet
     source:
-      # SNRC mainnet .testing NameWrapper
-      address: "0x9be8cf2b3d315a290de52f4c878a9e890269877f"
+      # SNRC mainnet .testing NameWrapper (TLD-parameterised redeploy, v2).
+      # The old .eth-hardcoded wrapper 0x9be8…877f had 0 wraps and is unindexed.
+      address: "0x0994819ee8acfcf10b17ebe1f826cc753ea4e9ef"
       abi: NameWrapper
-      startBlock: 25250870
+      startBlock: 25295489
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6

@@ -7,13 +7,17 @@
     "Resolver": {
       "startBlock": 25250870
     },
+    "ResolverV2": {
+      "address": "0x15231918f8c87bb8853219748b85a9bbcebedc1b",
+      "startBlock": 25295490
+    },
     "BaseRegistrar": {
       "address": "0x42d63e6a9f92c0282dc0b9677d9192d491b0da72",
       "startBlock": 25250870
     },
     "NameWrapper": {
-      "address": "0x9be8cf2b3d315a290de52f4c878a9e890269877f",
-      "startBlock": 25250870
+      "address": "0x0994819ee8acfcf10b17ebe1f826cc753ea4e9ef",
+      "startBlock": 25295489
     },
     "SimplexController": {
       "address": "0x41d7522837fe4f715f9e3aaaae99711870aaeefb",
